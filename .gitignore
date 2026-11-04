@@ -1,0 +1,20 @@
+# Thư viện và bản build (tạo lại bằng npm install / npm run build)
+node_modules/
+.nuxt/
+.output/
+.data/
+dist/
+*.timestamp-*.mjs
+*.log
+
+# Cấu hình chứa mật khẩu — chỉ đưa file mẫu (.env.example, secrets.example.h) lên GitHub
+.env
+!.env.example
+esp8266_iot/secrets.h
+config.ps1
+passwd
+
+# File tạm của Word / hệ điều hành
+~$*
+.DS_Store
+Thumbs.db
