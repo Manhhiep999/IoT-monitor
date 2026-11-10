@@ -1,8 +1,8 @@
 /**
  * Vòng đời một lệnh điều khiển (UC04):
- *   POST /actions -> ActionHistory.status = 'loading', Devices.current_status = 'loading', publish device_control
- *   ESP8266 publish device_response (trạng thái thật cả 3 đèn) -> lệnh đang chờ của đèn nào khớp trạng thái
- *     thì status = on/off, confirmed_at = NOW(), đẩy WS device:status
+ *   POST /actions -> ActionHistory.status = 'loading', Devices.current_status = 'loading', publish LEDn_ON|OFF lên iot/devices/control
+ *   ESP32 publish iot/devices/status {"device":"LEDn","status":"ON"} -> khớp lệnh thì status = on/off,
+ *     confirmed_at = NOW(), đẩy WS device:status; ngược lệnh thì status = 'fail'
  *   Quá actionTimeoutSeconds (hoặc Frontend báo PATCH fail) -> status = 'fail', trả thiết bị về trạng thái cũ
  */
 export type DeviceStatus = 'loading' | 'on' | 'off'
@@ -14,7 +14,7 @@ export interface DeviceRow {
   currentStatus: DeviceStatus
 }
 
-// actionId -> lệnh đang chờ ESP8266 xác nhận
+// actionId -> lệnh đang chờ ESP32 xác nhận
 const pending = new Map<
   number,
   { deviceId: number; action: 'ON' | 'OFF'; previousStatus: DeviceStatus; timer: NodeJS.Timeout }
@@ -100,20 +100,22 @@ export async function failAction(actionId: number, reason: string): Promise<bool
 }
 
 /**
- * Xử lý bản tin device_response của firmware, vd. {"led1":"on","led2":"off","led3":"off","status":"success"}.
- * Firmware gửi trạng thái đọc lại từ chân GPIO của cả 3 đèn sau MỖI lệnh (và khi vừa kết nối MQTT),
- * không kèm actionId -> với từng đèn: nếu có lệnh đang chờ và trạng thái thật khớp ý định của lệnh thì chốt lệnh;
- * nếu không có lệnh đang chờ thì chỉ đồng bộ current_status.
+ * Xử lý bản tin iot/devices/status của firmware, vd. {"device":"LED1","status":"ON","timestamp":"2026-11-10 09:30:02"}.
+ * ESP32 gửi trạng thái thật của đúng đèn vừa nhận lệnh (ALL_ON / ALL_OFF -> 3 bản tin, mỗi đèn một bản tin).
  */
-export async function handleDeviceResponse(payload: Record<string, unknown>) {
-  if (String(payload.status ?? '').toLowerCase() === 'error') {
-    console.warn('[mqtt] ESP8266 báo lỗi:', payload)
+export async function handleDeviceStatus(payload: Record<string, unknown>) {
+  const m = String(payload.device ?? '').trim().match(/^LED(\d+)$/i)
+  const status = String(payload.status ?? '').trim().toLowerCase()
+  if (!m || (status !== 'on' && status !== 'off')) {
+    console.warn('[mqtt] Bỏ qua bản tin trạng thái không hợp lệ:', payload)
     return
   }
-  for (const device of await listDevices()) {
-    const status = String(payload[ledKey(device.id)] ?? '').toLowerCase()
-    if (status === 'on' || status === 'off') await applyDeviceState(device, status)
+  const device = await getDevice(Number(m[1]))
+  if (!device) {
+    console.warn(`[mqtt] Thiết bị ${deviceCode(Number(m[1]))} không có trong bảng devices`)
+    return
   }
+  await applyDeviceState(device, status)
 }
 
 async function applyDeviceState(device: DeviceRow, status: 'on' | 'off') {
@@ -128,8 +130,13 @@ async function applyDeviceState(device: DeviceRow, status: 'on' | 'off') {
   }
 
   const [actionId, info] = waiting
-  // Phản hồi này sinh ra từ lệnh của đèn khác, đèn này chưa đổi -> tiếp tục chờ (hết hạn thì timeout)
-  if (info.action.toLowerCase() !== status) return
+  if (info.action.toLowerCase() !== status) {
+    // Phần cứng báo trạng thái ngược với lệnh -> lệnh thất bại, giao diện theo trạng thái thật của đèn
+    await failAction(actionId, `ESP32 báo ${status.toUpperCase()} trong khi lệnh là ${info.action}`)
+    await dbExec('UPDATE devices SET current_status = ? WHERE id = ?', [status, device.id])
+    broadcast('device:status', { deviceId: device.id, status, confirmedAt: null })
+    return
+  }
 
   clearTimeout(info.timer)
   pending.delete(actionId)

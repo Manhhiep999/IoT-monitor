@@ -1,7 +1,7 @@
 /**
  * Kênh WebSocket ws://<host>/realtime — đẩy bản tin dạng { "event": ..., "data": {...} } tới mọi client đã xác thực.
- *   sensor:update  ← sensor_data
- *   device:status  ← device_response (ESP8266 đã xác nhận)
+ *   sensor:update  ← iot/sensors/data
+ *   device:status  ← iot/devices/status (ESP32 đã xác nhận)
  *   action:update  ← lệnh đổi trạng thái loading / fail (Action History tự tải lại)
  */
 interface RealtimePeer {

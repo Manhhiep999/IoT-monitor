@@ -36,7 +36,7 @@ export const useMonitorStore = defineStore('monitor', {
       return times.length ? new Date(Math.max(...times)) : null
     },
 
-    /** Mất kết nối khi WebSocket rớt hoặc quá lâu không có dữ liệu mới từ ESP8266 */
+    /** Mất kết nối khi WebSocket rớt hoặc quá lâu không có dữ liệu mới từ ESP32 */
     isOffline() {
       if (!this.started) return false
       if (!realtime.connected.value) return true
@@ -162,7 +162,7 @@ export const useMonitorStore = defineStore('monitor', {
       }
     },
 
-    /** UC04: gửi lệnh ngược trạng thái hiện tại, chờ ESP8266 xác nhận qua device:status */
+    /** UC04: gửi lệnh ngược trạng thái hiện tại, chờ ESP32 xác nhận qua device:status */
     async toggleDevice(device) {
       if (this.pending[device.id] || device.currentStatus === 'loading') return
       const previousStatus = device.currentStatus
@@ -176,9 +176,6 @@ export const useMonitorStore = defineStore('monitor', {
         if (!this.pending[device.id]) return // đã được xác nhận trong lúc chờ response
         this.pending[device.id].actionId = res.actionId
 
-        // Đối với LED 2 (mô phỏng cho người hướng dẫn xem): đặt timeout 3.5s để demo nhanh và trực quan
-        const timeoutMs = device.id === 2 ? 3500 : ACTION_TIMEOUT_MS
-
         actionTimers.set(
           device.id,
           setTimeout(() => {
@@ -187,7 +184,7 @@ export const useMonitorStore = defineStore('monitor', {
             actionTimers.delete(device.id)
             // Rollback về trạng thái ban đầu (Fail-Safe)
             device.currentStatus = previousStatus
-            const errMsg = `ESP8266 không phản hồi lệnh TURN ${action} (${res.actionId}). Trạng thái đèn đã tự động hoàn tác về ${previousStatus.toUpperCase()}.`
+            const errMsg = `ESP32 không phản hồi lệnh TURN ${action} (${res.actionId}). Trạng thái đèn đã tự động hoàn tác về ${previousStatus.toUpperCase()}.`
             this.actionError = errMsg
 
             // Cập nhật trạng thái trong lịch sử thao tác thành FAIL
@@ -195,7 +192,7 @@ export const useMonitorStore = defineStore('monitor', {
               api.updateActionStatus(res.actionId, 'fail').catch(() => {})
             }
 
-            // Kích hoạt pop-up mô tả ngoại lệ UC04 cho người hướng dẫn xem
+            // Hiện hộp thoại báo lệnh không được ESP32 xác nhận
             this.exceptionAlert = {
               type: 'device_timeout',
               device: { ...device },
@@ -204,7 +201,7 @@ export const useMonitorStore = defineStore('monitor', {
               previousStatus,
               message: errMsg
             }
-          }, timeoutMs)
+          }, ACTION_TIMEOUT_MS)
         )
       } catch (e) {
         delete this.pending[device.id]

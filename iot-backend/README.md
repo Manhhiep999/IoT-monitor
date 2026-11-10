@@ -1,12 +1,12 @@
 # IoT Monitor — Backend (Nuxt.js)
 
-Backend cho đề tài **"Hệ thống giám sát nhiệt độ, độ ẩm và ánh sáng môi trường phòng học sử dụng ESP8266"**
+Backend cho đề tài **"Hệ thống giám sát nhiệt độ, độ ẩm và ánh sáng môi trường phòng học sử dụng ESP32"**
 (Hoàng Mạnh Hiệp — B23DCCN292), hiện thực theo Chương 2–4 của báo cáo và khớp với Frontend `iot-frontend`.
 
 ```
-ESP8266 ──MQTT──► Mosquitto ──► Backend Nuxt.js (Nitro) ──► MySQL
+ESP32 ──MQTT──► Mosquitto ──► Backend Nuxt.js (Nitro) ──► MySQL
    ▲                               │  RESTful /api/**
-   └──── device_control ◄──────────┘  WebSocket /realtime ──► Frontend Vue.js
+   └── iot/devices/control ◄─────┘  WebSocket /realtime ──► Frontend Vue.js
 ```
 
 | Thành phần | Công nghệ |
@@ -25,7 +25,7 @@ npm install
 cp .env.example .env      # sửa NUXT_DB_PASSWORD, NUXT_JWT_SECRET...
 npm run db:sample         # tạo database + bảng + tài khoản demo + 24h dữ liệu mẫu
 npm run dev               # http://localhost:3000
-npm run esp:sim           # (terminal khác) giả lập ESP8266 khi chưa có phần cứng
+npm run esp:sim           # (terminal khác) giả lập ESP32 khi chưa có phần cứng
 ```
 
 Tài khoản demo: `admin@iot.com` / `matkhau123`, `user@iot.com` / `matkhau123`.
@@ -38,7 +38,7 @@ Frontend: trong `iot-frontend/.env` đặt `VITE_USE_MOCK=false`, `VITE_BACKEND_
 | `npm run db:init` | Tạo database/bảng, seed users, sensors, devices (chạy lại không mất dữ liệu) |
 | `npm run db:sample` | Như trên + 24h dữ liệu cảm biến (5 phút/lần) và 6 bản ghi ActionHistory mẫu nếu bảng còn trống |
 | `npm run db:reset` | **Xoá** toàn bộ bảng rồi tạo lại kèm dữ liệu mẫu |
-| `npm run esp:sim -- --interval 5 --no-ack 2` | Giả lập ESP8266: gửi cảm biến mỗi 5s, không phản hồi lệnh của thiết bị 2 (thử ngoại lệ UC04). Gõ `off`/`on` để mô phỏng mất kết nối |
+| `npm run esp:sim -- --interval 2 --no-ack 2` | Giả lập ESP32: gửi cảm biến mỗi 2s, không phản hồi lệnh của thiết bị 2 (thử ngoại lệ UC04). Gõ `off`/`on` để mô phỏng mất kết nối |
 | `npm run build` → `npm start` | Build production (`.output/`) và chạy |
 
 ## API
@@ -68,29 +68,30 @@ nhập thiếu từ phải sang để mở rộng phạm vi (`2026/08/17 09` = c
 
 | Event | Khi nào | Data |
 |---|---|---|
-| `sensor:update` | Nhận bản tin `sensor_data` | giống `GET /api/sensors/latest` |
-| `device:status` | ESP8266 xác nhận qua `device_response` | `{ deviceId, actionId, status, confirmedAt }` |
+| `sensor:update` | Nhận bản tin `iot/sensors/data` | giống `GET /api/sensors/latest` |
+| `device:status` | ESP32 xác nhận qua `iot/devices/status` | `{ deviceId, actionId, status, confirmedAt }` |
 | `action:update` | Lệnh mới (`loading`) hoặc thất bại (`fail`) | `{ actionId, deviceId, status, deviceStatus? }` |
 
 Token sai → đóng kết nối với mã `4401`.
 
-## MQTT — hợp đồng với firmware ESP8266
+## MQTT — hợp đồng với firmware ESP32 (`../esp32_iot/esp32_iot.ino`)
 
 | Topic | Chiều | Payload |
 |---|---|---|
-| `sensor_data` | ESP → Backend | `{"temperature":29.4,"humidity":58.6,"light":412}` mỗi 2 giây (thiếu trường nào bỏ qua trường đó) |
-| `device_control` | Backend → ESP | `{"led1":"on"}` (thiết bị id N ↔ `ledN`), hoặc `{"all":"off"}` (QoS 1) |
-| `device_response` | ESP → Backend | `{"led1":"on","led2":"off","led3":"off","status":"success"}` — trạng thái đọc lại từ GPIO |
+| `iot/sensors/data` | ESP32 → Backend | `{"timestamp":"2026-11-10 09:30:00","temperature":29.4,"humidity":58.6,"light":412}` mỗi 2 giây (DHT11 lỗi thì thiếu temperature/humidity — trường nào thiếu bỏ qua trường đó) |
+| `iot/devices/control` | Backend → ESP32 | Văn bản thuần `LED1_ON`, `LED1_OFF`, … `LED3_OFF`, `ALL_ON`, `ALL_OFF` (QoS 1; thiết bị id N ↔ `LEDn`) |
+| `iot/devices/status` | ESP32 → Backend | `{"device":"LED1","status":"ON","timestamp":"…"}` — mỗi đèn vừa đổi trạng thái một bản tin |
 
-- Thời điểm đo `measured_at` lấy theo giờ Backend/MySQL lúc nhận (ESP8266 không cần đồng bộ NTP).
-- Giá trị ngoài ngưỡng hợp lệ (nhiệt độ −40…85, độ ẩm 0…100, ánh sáng ≥ 0) bị bỏ qua.
-- Firmware không gửi `actionId`: với mỗi đèn, nếu có lệnh `loading` và trạng thái thật khớp `action` thì chốt lệnh đó;
-  không có lệnh chờ thì chỉ đồng bộ `devices.current_status` (vd. ESP khởi động lại).
+- `light` đã được ESP32 quy đổi sang lux. Trường nào không có trong bảng `sensors` sẽ bị Backend bỏ qua; muốn thêm cảm biến
+  (vd. gas, dust, noise) thì thêm dòng vào `SENSORS` trong `scripts/db-init.mjs` — cột `warn_above` dự phòng cho ngưỡng cảnh báo.
+- `measured_at` = `timestamp` NTP của ESP32 nếu đúng định dạng và lệch ≤ 5 phút so với giờ MySQL; `"N/A"`/sai/lệch nhiều → `NOW()`.
+- Giá trị ngoài ngưỡng hợp lệ (nhiệt độ −40…85, độ ẩm 0…100, ánh sáng 0…100000) bị bỏ qua.
+- Phản hồi khớp lệnh đang chờ → `on/off` + `confirmed_at`; phản hồi **ngược** lệnh → `fail` và đèn theo trạng thái thật.
 
 ## Luồng điều khiển đèn (UC04) & ngoại lệ
 
 1. `POST /actions` → ghi `action_history.status = 'loading'`, `devices.current_status = 'loading'` **rồi** mới publish lệnh.
-2. ESP8266 phản hồi → `status = on/off`, `confirmed_at = NOW()`, đẩy `device:status`.
+2. ESP32 phản hồi → `status = on/off`, `confirmed_at = NOW()`, đẩy `device:status`.
 3. Quá `NUXT_ACTION_TIMEOUT_SECONDS` (mặc định 15s) hoặc FE gửi `PATCH ... fail` → `status = 'fail'`, thiết bị trả về trạng thái trước lệnh, đẩy `action:update`.
 4. Backend khởi động lại → mọi lệnh còn `loading` chuyển `fail`.
 
@@ -103,7 +104,8 @@ Token sai → đóng kết nối với mã `4401`.
 
 - `action_history.status` có thêm giá trị `'fail'` (cơ chế timeout mà báo cáo để dành cho giai đoạn triển khai; FE đã hiển thị FAIL).
 - `devices.description` (nullable) — FE hiển thị mô tả dưới tên thiết bị.
-- Seed 3 đèn `Đèn LED 1..3` để khớp FE (FE dùng LED 2 làm demo ngoại lệ). Chỉ cần 1 đèn thì sửa `DEVICES` trong `scripts/db-init.mjs`.
+- Seed 3 đèn `Đèn LED 1..3` (↔ `LED1..LED3` của ESP32) và 3 cảm biến: temperature, humidity, light. `db:init` gỡ gas/dust/noise nếu database còn.
+- `sensors.type` là `VARCHAR(30)` và có cột `warn_above` (ngưỡng cảnh báo). Database tạo từ bản ESP8266 cũ được `npm run db:init` nâng cấp tại chỗ, không mất dữ liệu.
 
 ## Cấu trúc
 

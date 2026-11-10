@@ -25,25 +25,30 @@ function Broker {
     & "$MQ_DIR\mosquitto.exe" -c "$IOT_DIR\mosquitto.conf" -v
 }
 
-# Gui 1 message bat ky:  Pub sensor_data '{"temperature":30}'
+# Gui 1 message bat ky:  Pub iot/devices/control LED1_ON
 function Pub([string]$Topic, [string]$Message) {
     Write-Host "mosquitto_pub -h $MQ_HOST -p $MQ_PORT -u $MQ_USER -P $MQ_PASS -t $Topic -m '$Message'" -ForegroundColor DarkGray
     & "$MQ_DIR\mosquitto_pub.exe" -h $MQ_HOST -p $MQ_PORT -u $MQ_USER -P $MQ_PASS -t $Topic -m (Protect-Quotes $Message)
 }
 
-# Nghe 1 topic:  Sub sensor_data
+# Nghe 1 topic:  Sub iot/sensors/data   (Sub '#' = nghe tat ca)
 function Sub([string]$Topic) {
     Write-Host "mosquitto_sub -h $MQ_HOST -p $MQ_PORT -u $MQ_USER -P $MQ_PASS -t $Topic -v" -ForegroundColor DarkGray
     & "$MQ_DIR\mosquitto_sub.exe" -h $MQ_HOST -p $MQ_PORT -u $MQ_USER -P $MQ_PASS -t $Topic -v
 }
 
-# Dieu khien den:  Led led1 on  |  Led all off
+# Dieu khien den nhu Backend gui xuong ESP32:  Led 1 on  |  Led all off
 function Led([string]$Name, [string]$State) {
-    Pub "device_control" ('{"' + $Name + '":"' + $State + '"}')
+    $cmd = if ($Name -eq 'all') { 'ALL_' + $State.ToUpper() } else { 'LED' + $Name + '_' + $State.ToUpper() }
+    Pub "iot/devices/control" $cmd
 }
 
-# Hoi trang thai den ma khong doi gi
-function Status { Pub "device_control" '{}' }
+# Gia lap ESP32 bao trang thai den:  LedStatus 1 on
+function LedStatus([string]$Id, [string]$State) {
+    Pub "iot/devices/status" ('{"device":"LED' + $Id + '","status":"' + $State.ToUpper() + '","timestamp":"' + (Get-Date -Format 'yyyy-MM-dd HH:mm:ss') + '"}')
+}
 
-# Phan 1 (gia lap HW bang terminal): gui 1 ban tin cam bien gia
-function FakeSensor { Pub "sensor_data" '{"temperature":28.5,"humidity":60,"light":512}' }
+# Gia lap ESP32 gui 1 ban tin cam bien (giong payload cua firmware)
+function FakeSensor {
+    Pub "iot/sensors/data" ('{"timestamp":"' + (Get-Date -Format 'yyyy-MM-dd HH:mm:ss') + '","temperature":28.5,"humidity":60,"light":320}')
+}

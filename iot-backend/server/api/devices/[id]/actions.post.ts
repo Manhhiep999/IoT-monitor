@@ -20,8 +20,8 @@ export default defineEventHandler(async (event) => {
   // Ghi ActionHistory status=loading TRƯỚC, rồi mới publish lệnh — không giả định đèn đã đổi trạng thái
   const actionId = await createAction(user.id, device, action)
   try {
-    // Firmware nhận {"led1":"on"}; chỉ trả trạng thái thật của cả 3 đèn (không kèm actionId)
-    await mqttPublish(TOPICS.deviceControl, { [ledKey(deviceId)]: action.toLowerCase() })
+    // Firmware ESP32 nhận lệnh văn bản (LED1_ON...) rồi trả {"device":"LED1","status":"ON"} lên iot/devices/status
+    await mqttPublish(TOPICS.deviceControl, controlCommand(deviceId, action))
   } catch (e: any) {
     await failAction(actionId, `publish lỗi: ${e.message}`)
     throw createError({ statusCode: 503, statusMessage: 'Service Unavailable', message: 'Không gửi được lệnh tới MQTT Broker' })

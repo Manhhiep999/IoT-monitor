@@ -9,7 +9,7 @@ const emit = defineEmits(['details'])
   <div class="offline" role="alert">
     <span class="offline__icon" aria-hidden="true">!</span>
     <div class="offline__text">
-      <p class="offline__title">Mất kết nối với thiết bị ESP8266</p>
+      <p class="offline__title">Mất kết nối với thiết bị ESP32</p>
       <p class="offline__desc">
         Dữ liệu hiển thị có thể không phải là dữ liệu mới nhất. Lần cập nhật cuối: {{ lastUpdated }}
       </p>

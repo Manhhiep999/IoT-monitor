@@ -2,9 +2,9 @@ import mqtt from 'mqtt'
 
 /**
  * MQTT client của Backend:
- *   subscribe sensor_data      -> lưu SensorData, đẩy WS sensor:update
- *   subscribe device_response  -> chốt ActionHistory, cập nhật Devices, đẩy WS device:status
- *   publish   device_control   (ở POST /api/devices/{id}/actions)
+ *   subscribe iot/sensors/data     -> lưu SensorData, đẩy WS sensor:update
+ *   subscribe iot/devices/status   -> chốt ActionHistory, cập nhật Devices, đẩy WS device:status
+ *   publish   iot/devices/control  (lệnh LED1_ON... ở POST /api/devices/{id}/actions)
  */
 export default defineNitroPlugin((nitroApp) => {
   const { mqtt: cfg } = useRuntimeConfig()
@@ -24,7 +24,7 @@ export default defineNitroPlugin((nitroApp) => {
 
   client.on('connect', () => {
     console.info(`[mqtt] Đã kết nối ${cfg.url}`)
-    client.subscribe([TOPICS.sensorData, TOPICS.deviceResponse], { qos: 1 }, (err) => {
+    client.subscribe([TOPICS.sensorData, TOPICS.deviceStatus], { qos: 1 }, (err) => {
       if (err) console.error('[mqtt] Subscribe lỗi:', err.message)
     })
   })
@@ -47,7 +47,7 @@ export default defineNitroPlugin((nitroApp) => {
         if (await saveSensorPayload(payload)) broadcast('sensor:update', await getLatestReadings())
         return
       }
-      if (topic === TOPICS.deviceResponse) await handleDeviceResponse(payload)
+      if (topic === TOPICS.deviceStatus) await handleDeviceStatus(payload)
     } catch (e: any) {
       console.error(`[mqtt] Lỗi xử lý bản tin ${topic}:`, e.message)
     }

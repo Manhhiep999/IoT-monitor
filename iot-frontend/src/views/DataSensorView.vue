@@ -159,7 +159,7 @@ function changeLimit(l) {
   load()
 }
 
-const unitDecimals = (type) => (type === 'light' ? 0 : 1)
+const unitDecimals = (type) => (type === 'temperature' || type === 'humidity' ? 1 : 0)
 
 onMounted(() => {
   load()

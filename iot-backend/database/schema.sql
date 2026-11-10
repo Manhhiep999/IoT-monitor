@@ -16,8 +16,11 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS sensors (
   id         BIGINT       NOT NULL AUTO_INCREMENT,
   name       VARCHAR(100) NOT NULL,
-  type       ENUM('temperature','humidity','light') NOT NULL,
+  -- Trùng tên trường trong payload iot/sensors/data: temperature, humidity, light, gas, dust, noise
+  type       VARCHAR(30)  NOT NULL,
   unit       VARCHAR(20)  NOT NULL,
+  -- Vượt ngưỡng -> cảnh báo (khớp ngưỡng nháy LED cảnh báo trên ESP32); NULL = không cảnh báo
+  warn_above DECIMAL(10,2) NULL,
   created_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   UNIQUE KEY uq_sensors_type (type)

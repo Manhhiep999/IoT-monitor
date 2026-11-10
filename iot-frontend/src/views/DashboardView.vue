@@ -24,13 +24,6 @@ const activeCount = computed(() => monitor.devices.filter((d) => d.currentStatus
 const isModalOpen = computed(() => Boolean(monitor.exceptionAlert || monitor.offlineModalOpen))
 const modalType = computed(() => (monitor.exceptionAlert ? 'device_timeout' : 'offline'))
 const modalData = computed(() => monitor.exceptionAlert || { lastUpdated: lastUpdatedText.value })
-
-function handleReconnect() {
-  if (window.__iotMock?.setEspOnline) {
-    window.__iotMock.setEspOnline(true)
-  }
-  monitor.closeExceptionModal()
-}
 </script>
 
 <template>
@@ -114,7 +107,7 @@ function handleReconnect() {
         <div class="station-box">
           <div class="station-row">
             <span class="station-label">Trạm phần cứng:</span>
-            <span class="station-val">NodeMCU ESP8266</span>
+            <span class="station-val">ESP32 (NodeMCU-32S)</span>
           </div>
           <div class="station-row">
             <span class="station-label">Trạng thái kết nối:</span>
@@ -142,7 +135,6 @@ function handleReconnect() {
       :type="modalType"
       :data="modalData"
       @close="monitor.closeExceptionModal"
-      @reconnect="handleReconnect"
     />
   </div>
 </template>
@@ -198,6 +190,7 @@ function handleReconnect() {
   min-height: 0;
   height: 100%;
 }
+
 
 .panel--actuators {
   min-height: 0;

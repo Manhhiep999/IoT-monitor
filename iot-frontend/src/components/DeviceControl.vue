@@ -10,11 +10,10 @@ const props = defineProps({
 const emit = defineEmits(['toggle'])
 
 const isLoading = computed(() => props.device.currentStatus === 'loading')
-const isLed2Demo = computed(() => props.device.id === 2)
 </script>
 
 <template>
-  <div class="device" :class="{ 'is-demo-actuator': isLed2Demo }">
+  <div class="device">
     <div class="device__info">
       <div class="device__icon" :class="{ 'is-on': device.currentStatus === 'on' }" aria-hidden="true">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -24,18 +23,9 @@ const isLed2Demo = computed(() => props.device.id === 2)
         </svg>
       </div>
       <div>
-        <p class="device__name">
-          {{ device.name }}
-          <span v-if="isLed2Demo" class="badge-demo" title="Thiết bị được cấu hình để mô phỏng ngoại lệ mất kết nối / không phản hồi">
-            Demo Ngoại Lệ UC04
-          </span>
-        </p>
+        <p class="device__name">{{ device.name }}</p>
         <p class="device__desc">
-          {{
-            isLoading
-              ? (isLed2Demo ? 'Đang gửi MQTT... đang chờ phản hồi từ ESP8266' : 'Đang chờ ESP8266 xác nhận…')
-              : (isLed2Demo ? 'Nhấn công tắc để mô phỏng ngoại lệ phần cứng mất kết nối' : (device.description || description))
-          }}
+          {{ isLoading ? 'Đang chờ ESP32 xác nhận…' : device.description || description }}
         </p>
       </div>
     </div>
@@ -118,21 +108,4 @@ const isLed2Demo = computed(() => props.device.id === 2)
   gap: 12px;
 }
 
-.is-demo-actuator {
-  border-color: #fde68a;
-  background: linear-gradient(to right, #ffffff, #fffdfa);
-}
-
-.badge-demo {
-  display: inline-block;
-  margin-left: 6px;
-  padding: 2px 7px;
-  font-size: 10px;
-  font-weight: 700;
-  color: #b45309;
-  background: #fef3c7;
-  border: 1px solid #fde68a;
-  border-radius: 4px;
-  vertical-align: middle;
-}
 </style>

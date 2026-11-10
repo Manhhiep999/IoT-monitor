@@ -1,7 +1,7 @@
 {
   "info": {
     "_postman_id": "15643155-9108-4fef-a99a-84aa6474048d",
-    "name": "IoT Monitor ESP8266 — B23DCCN292",
+    "name": "IoT Monitor ESP32 — B23DCCN292",
     "description": "API của hệ thống giám sát nhiệt độ, độ ẩm, ánh sáng phòng học (Backend Nuxt.js).\n\n1. Chạy request **Auth → Đăng nhập** trước: token được lưu tự động vào biến `token`.\n2. Các request còn lại dùng `Authorization: Bearer {{token}}` (khai báo ở cấp collection).\n3. Đổi `baseUrl` nếu Backend không chạy ở http://localhost:3000/api.\n\nWebSocket realtime: `ws://localhost:3000/realtime?token={{token}}` — sự kiện sensor:update, device:status, action:update (mở bằng New → WebSocket trong Postman).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
@@ -78,6 +78,52 @@
                 ]
               }
             }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                },
+                "auth": {
+                  "type": "noauth"
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"admin@iot.com\",\n  \"password\": \"matkhau123\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.…(JWT, hết hạn sau 24 giờ)\",\n  \"user\": {\n    \"id\": 1,\n    \"fullName\": \"Hoàng Mạnh Hiệp\"\n  },\n  \"message\": \"Đăng nhập thành công\"\n}"
+            }
           ]
         },
         {
@@ -124,6 +170,52 @@
                 ]
               }
             }
+          ],
+          "response": [
+            {
+              "name": "401 Unauthorized",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                },
+                "auth": {
+                  "type": "noauth"
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"admin@iot.com\",\n  \"password\": \"sai\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": true,\n  \"statusCode\": 401,\n  \"statusMessage\": \"Unauthorized\",\n  \"message\": \"Sai tài khoản hoặc mật khẩu\"\n}"
+            }
           ]
         }
       ]
@@ -158,6 +250,35 @@
                 ]
               }
             }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/sensors/latest",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "sensors",
+                    "latest"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"temperature\": {\n    \"value\": 29.5,\n    \"unit\": \"°C\",\n    \"updatedAt\": \"2026-11-11 01:47:06\",\n    \"warning\": false\n  },\n  \"humidity\": {\n    \"value\": 52.7,\n    \"unit\": \"%\",\n    \"updatedAt\": \"2026-11-11 01:47:06\",\n    \"warning\": false\n  },\n  \"light\": {\n    \"value\": 16,\n    \"unit\": \"lux\",\n    \"updatedAt\": \"2026-11-11 01:47:06\",\n    \"warning\": false\n  }\n}"
+            }
           ]
         },
         {
@@ -186,6 +307,34 @@
                 ]
               }
             }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/sensors",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "sensors"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": [\n    {\n      \"id\": 1,\n      \"name\": \"Nhiệt độ\",\n      \"type\": \"temperature\",\n      \"unit\": \"°C\",\n      \"warnAbove\": null\n    },\n    {\n      \"id\": 2,\n      \"name\": \"Độ ẩm\",\n      \"type\": \"humidity\",\n      \"unit\": \"%\",\n      \"warnAbove\": null\n    },\n    {\n      \"id\": 3,\n      \"name\": \"Ánh sáng\",\n      \"type\": \"light\",\n      \"unit\": \"lux\",\n      \"warnAbove\": null\n    }\n  ]\n}"
+            }
           ]
         },
         {
@@ -194,7 +343,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/sensors/data?type=temperature&time=&search=&page=1&limit=10",
+              "raw": "{{baseUrl}}/sensors/data?type=temperature&time=2026/11/11&search=29&page=1&limit=10",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -210,12 +359,12 @@
                 },
                 {
                   "key": "time",
-                  "value": "",
+                  "value": "2026/11/11",
                   "description": "Tiền tố yyyy/mm/dd hh:mm:ss, có thể nhập thiếu"
                 },
                 {
                   "key": "search",
-                  "value": "",
+                  "value": "29",
                   "description": "Tìm theo giá trị (tiền tố)"
                 },
                 {
@@ -241,6 +390,62 @@
                   "pm.test('HTTP 200', () => pm.response.to.have.status(200));"
                 ]
               }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/sensors/data?type=temperature&time=2026/11/11&search=29&page=1&limit=10",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "sensors",
+                    "data"
+                  ],
+                  "query": [
+                    {
+                      "key": "type",
+                      "value": "temperature",
+                      "description": "temperature | humidity | light (bỏ trống = tất cả)"
+                    },
+                    {
+                      "key": "time",
+                      "value": "2026/11/11",
+                      "description": "Tiền tố yyyy/mm/dd hh:mm:ss, có thể nhập thiếu"
+                    },
+                    {
+                      "key": "search",
+                      "value": "29",
+                      "description": "Tìm theo giá trị (tiền tố)"
+                    },
+                    {
+                      "key": "page",
+                      "value": "1",
+                      "description": ""
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10",
+                      "description": ""
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": [\n    {\n      \"id\": \"S9997\",\n      \"sensorType\": \"temperature\",\n      \"value\": 29.5,\n      \"unit\": \"°C\",\n      \"timestamp\": \"2026-11-11 01:47:06\"\n    },\n    {\n      \"id\": \"S9994\",\n      \"sensorType\": \"temperature\",\n      \"value\": 29.5,\n      \"unit\": \"°C\",\n      \"timestamp\": \"2026-11-11 01:47:04\"\n    },\n    {\n      \"id\": \"S9991\",\n      \"sensorType\": \"temperature\",\n      \"value\": 29.5,\n      \"unit\": \"°C\",\n      \"timestamp\": \"2026-11-11 01:47:02\"\n    }\n  ],\n  \"page\": 1,\n  \"total\": 2003\n}"
             }
           ]
         },
@@ -278,6 +483,42 @@
                 ]
               }
             }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/sensors/data?range=24h",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "sensors",
+                    "data"
+                  ],
+                  "query": [
+                    {
+                      "key": "range",
+                      "value": "24h",
+                      "description": "Khoảng thời gian, tối đa 31 ngày"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": [\n    {\n      \"id\": \"S181\",\n      \"sensorType\": \"temperature\",\n      \"value\": 26,\n      \"unit\": \"°C\",\n      \"timestamp\": \"2026-11-10 02:21:00\"\n    },\n    {\n      \"id\": \"S182\",\n      \"sensorType\": \"humidity\",\n      \"value\": 67.3,\n      \"unit\": \"%\",\n      \"timestamp\": \"2026-11-10 02:21:00\"\n    },\n    {\n      \"id\": \"S183\",\n      \"sensorType\": \"light\",\n      \"value\": 66,\n      \"unit\": \"lux\",\n      \"timestamp\": \"2026-11-10 02:21:00\"\n    }\n  ],\n  \"page\": 1,\n  \"total\": 816\n}"
+            }
           ]
         }
       ]
@@ -311,6 +552,34 @@
                 ]
               }
             }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/devices",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "devices"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": [\n    {\n      \"id\": 1,\n      \"name\": \"Đèn LED 1\",\n      \"description\": \"Đèn chiếu sáng khu vực 1\",\n      \"currentStatus\": \"on\"\n    },\n    {\n      \"id\": 2,\n      \"name\": \"Đèn LED 2\",\n      \"description\": \"Đèn chiếu sáng khu vực 2\",\n      \"currentStatus\": \"on\"\n    },\n    {\n      \"id\": 3,\n      \"name\": \"Đèn LED 3\",\n      \"description\": \"Đèn chiếu sáng khu vực 3\",\n      \"currentStatus\": \"on\"\n    }\n  ]\n}"
+            }
           ]
         },
         {
@@ -334,7 +603,7 @@
                 "actions"
               ]
             },
-            "description": "202 + status loading; Backend publish {\"led1\":\"on\"} lên device_control. 409 nếu đèn đang loading, 503 nếu mất MQTT.",
+            "description": "202 + status loading; Backend publish LED1_ON lên iot/devices/control. 409 nếu đèn đang loading, 503 nếu mất MQTT.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"action\": \"ON\"\n}",
@@ -355,6 +624,50 @@
                   "pm.collectionVariables.set('actionId', pm.response.json().actionId.replace(/^A/, ''));"
                 ]
               }
+            }
+          ],
+          "response": [
+            {
+              "name": "202 Accepted",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/devices/1/actions",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "devices",
+                    "1",
+                    "actions"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"action\": \"ON\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Accepted",
+              "code": 202,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"actionId\": \"A84\",\n  \"deviceId\": 1,\n  \"action\": \"ON\",\n  \"status\": \"loading\",\n  \"createdAt\": \"2026-11-10T19:16:54.587Z\",\n  \"message\": \"Yêu cầu đã được ghi nhận và chuyển tới MQTT\"\n}"
             }
           ]
         },
@@ -379,7 +692,7 @@
                 "actions"
               ]
             },
-            "description": "Nếu ESP8266 chưa xác nhận lệnh bật ở request trước, Backend trả 409.",
+            "description": "Nếu ESP32 chưa xác nhận lệnh bật ở request trước, Backend trả 409.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"action\": \"OFF\"\n}",
@@ -399,6 +712,50 @@
                   "pm.test('HTTP 202 (hoặc 409 nếu đèn còn đang chờ xác nhận lệnh trước)', () => pm.expect(pm.response.code).to.be.oneOf([202, 409]));"
                 ]
               }
+            }
+          ],
+          "response": [
+            {
+              "name": "409 Conflict",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/devices/1/actions",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "devices",
+                    "1",
+                    "actions"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"action\": \"OFF\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": true,\n  \"statusCode\": 409,\n  \"statusMessage\": \"Conflict\",\n  \"message\": \"Thiết bị đang chờ xác nhận lệnh trước đó\"\n}"
             }
           ]
         },
@@ -444,6 +801,50 @@
                 ]
               }
             }
+          ],
+          "response": [
+            {
+              "name": "400 Bad Request",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/devices/1/actions",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "devices",
+                    "1",
+                    "actions"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"action\": \"X\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": true,\n  \"statusCode\": 400,\n  \"statusMessage\": \"Bad Request\",\n  \"message\": \"Hành động không hợp lệ (chỉ nhận ON hoặc OFF)\"\n}"
+            }
           ]
         },
         {
@@ -452,7 +853,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/devices/actions?keyword=&action=&status=&dateFrom=&dateTo=&page=1&limit=10",
+              "raw": "{{baseUrl}}/devices/actions?keyword=LED 1&action=ON&dateFrom=2026-11-10&dateTo=2026-11-11&page=1&limit=10",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -463,27 +864,28 @@
               "query": [
                 {
                   "key": "keyword",
-                  "value": "",
+                  "value": "LED 1",
                   "description": ""
                 },
                 {
                   "key": "action",
-                  "value": "",
+                  "value": "ON",
                   "description": "ON | OFF"
                 },
                 {
                   "key": "status",
-                  "value": "",
-                  "description": "loading | on | off | fail"
+                  "value": "on",
+                  "description": "loading | on | off | fail",
+                  "disabled": true
                 },
                 {
                   "key": "dateFrom",
-                  "value": "",
+                  "value": "2026-11-10",
                   "description": "YYYY-MM-DD [HH:mm:ss]"
                 },
                 {
                   "key": "dateTo",
-                  "value": "",
+                  "value": "2026-11-11",
                   "description": ""
                 },
                 {
@@ -509,6 +911,73 @@
                   "pm.test('HTTP 200', () => pm.response.to.have.status(200));"
                 ]
               }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/devices/actions?keyword=LED 1&action=ON&dateFrom=2026-11-10&dateTo=2026-11-11&page=1&limit=10",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "devices",
+                    "actions"
+                  ],
+                  "query": [
+                    {
+                      "key": "keyword",
+                      "value": "LED 1",
+                      "description": ""
+                    },
+                    {
+                      "key": "action",
+                      "value": "ON",
+                      "description": "ON | OFF"
+                    },
+                    {
+                      "key": "status",
+                      "value": "on",
+                      "description": "loading | on | off | fail",
+                      "disabled": true
+                    },
+                    {
+                      "key": "dateFrom",
+                      "value": "2026-11-10",
+                      "description": "YYYY-MM-DD [HH:mm:ss]"
+                    },
+                    {
+                      "key": "dateTo",
+                      "value": "2026-11-11",
+                      "description": ""
+                    },
+                    {
+                      "key": "page",
+                      "value": "1",
+                      "description": ""
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10",
+                      "description": ""
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": [\n    {\n      \"id\": \"A84\",\n      \"deviceName\": \"Đèn LED 1\",\n      \"performedBy\": \"Hoàng Mạnh Hiệp\",\n      \"action\": \"ON\",\n      \"status\": \"loading\",\n      \"createdAt\": \"2026-11-11 02:16:54\",\n      \"confirmedAt\": null\n    },\n    {\n      \"id\": \"A83\",\n      \"deviceName\": \"Đèn LED 3\",\n      \"performedBy\": \"Hoàng Mạnh Hiệp\",\n      \"action\": \"ON\",\n      \"status\": \"on\",\n      \"createdAt\": \"2026-11-11 01:23:38\",\n      \"confirmedAt\": \"2026-11-11 01:23:38\"\n    },\n    {\n      \"id\": \"A82\",\n      \"deviceName\": \"Đèn LED 2\",\n      \"performedBy\": \"Hoàng Mạnh Hiệp\",\n      \"action\": \"ON\",\n      \"status\": \"on\",\n      \"createdAt\": \"2026-11-11 01:23:36\",\n      \"confirmedAt\": \"2026-11-11 01:23:37\"\n    }\n  ],\n  \"page\": 1,\n  \"total\": 84\n}"
             }
           ]
         },
@@ -546,6 +1015,43 @@
                   "pm.test('HTTP 200', () => pm.response.to.have.status(200));"
                 ]
               }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/devices/actions/export?action=ON",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "devices",
+                    "actions",
+                    "export"
+                  ],
+                  "query": [
+                    {
+                      "key": "action",
+                      "value": "ON",
+                      "description": "Cùng bộ lọc với lịch sử"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "text",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "text/csv; charset=utf-8"
+                }
+              ],
+              "body": "ID,Actuator Name,Performed By,Triggered Action,Status,Execution Time,Confirmed At\n\"A84\",\"Đèn LED 1\",\"Hoàng Mạnh Hiệp\",\"TURN ON\",\"LOADING\",\"2026/11/11 02:16:54\",\"\"\n\"A83\",\"Đèn LED 3\",\"Hoàng Mạnh Hiệp\",\"TURN ON\",\"ON\",\"2026/11/11 01:23:38\",\"2026/11/11 01:23:38\"\n\"A82\",\"Đèn LED 2\",\"Hoàng Mạnh Hiệp\",\"TURN ON\",\"ON\",\"2026/11/11 01:23:36\",\"2026/11/11 01:23:37\""
             }
           ]
         },
@@ -591,6 +1097,50 @@
                 ]
               }
             }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/devices/actions/{{actionId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "devices",
+                    "actions",
+                    "{{actionId}}"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"fail\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"action\": {\n    \"id\": \"A84\",\n    \"deviceName\": \"Đèn LED 1\",\n    \"performedBy\": \"Hoàng Mạnh Hiệp\",\n    \"action\": \"ON\",\n    \"status\": \"fail\",\n    \"createdAt\": \"2026-11-11 02:16:54\",\n    \"confirmedAt\": null\n  }\n}"
+            }
           ]
         }
       ]
@@ -624,6 +1174,34 @@
                 ]
               }
             }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/users",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "users"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": [\n    {\n      \"id\": 1,\n      \"fullName\": \"Hoàng Mạnh Hiệp\",\n      \"username\": \"admin@iot.com\"\n    },\n    {\n      \"id\": 2,\n      \"fullName\": \"Nguyễn Văn An\",\n      \"username\": \"user@iot.com\"\n    }\n  ]\n}"
+            }
           ]
         },
         {
@@ -654,6 +1232,37 @@
                   "pm.test('HTTP 200', () => pm.response.to.have.status(200));"
                 ]
               }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/health",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "health"
+                  ]
+                },
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"ok\",\n  \"database\": true,\n  \"mqtt\": true,\n  \"realtimeClients\": 1\n}"
             }
           ]
         }
@@ -688,6 +1297,35 @@
                   "pm.test('HTTP 200', () => pm.response.to.have.status(200));"
                 ]
               }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/logout",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "logout"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"Đăng xuất thành công\"\n}"
             }
           ]
         }

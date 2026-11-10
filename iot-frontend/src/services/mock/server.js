@@ -1,8 +1,8 @@
 /**
  * Backend giả lập (in-memory) — trả về đúng định dạng response trong báo cáo,
- * giúp chạy thử Frontend khi chưa có Backend Nuxt.js / ESP8266.
+ * giúp chạy thử Frontend khi chưa có Backend Nuxt.js / ESP32.
  *
- * Thử tình huống mất kết nối ESP8266 trong DevTools console:
+ * Thử tình huống mất kết nối ESP32 trong DevTools console:
  *   __iotMock.setEspOnline(false)   // ngừng gửi dữ liệu + không xác nhận lệnh
  *   __iotMock.setEspOnline(true)
  */
@@ -11,7 +11,7 @@ import { formatDateTime, parseDateTime } from '@/utils/datetime'
 
 const SAMPLE_INTERVAL_MS = 5 * 60 * 1000 // dữ liệu lịch sử: 5 phút / lần đo
 const LIVE_INTERVAL_MS = 5000 // dữ liệu realtime: 5 giây / lần đo
-const CONFIRM_DELAY_MS = 1500 // ESP8266 phản hồi sau ~1.5s
+const CONFIRM_DELAY_MS = 1500 // ESP32 phản hồi sau ~1.5s
 
 const users = [
   { id: 1, username: 'admin@iot.com', password: 'matkhau123', fullName: 'Hoàng Mạnh Hiệp' },
@@ -33,7 +33,7 @@ const devices = [
 const sensorData = []
 let nextSensorId = 1
 let espOnline = true
-let led2ExceptionEnabled = true // Mặc định bật mô phỏng ngoại lệ cho Đèn LED 2 để phục vụ demo báo cáo
+let led2ExceptionEnabled = false // bật bằng window.__iotMock.setLed2Exception(true) để thử trường hợp ESP32 không phản hồi
 
 const actionHistory = [
   { id: 207, deviceId: 1, userId: 1, action: 'OFF', status: 'off', createdAt: '2026-08-16 22:03:09', confirmedAt: '2026-08-16 22:03:11' },
@@ -312,13 +312,13 @@ export async function sendDeviceAction(deviceId, action) {
   actionHistory.push(record)
   device.currentStatus = 'loading'
 
-  // ESP8266 thực thi lệnh rồi publish trạng thái thật lên device_response
+  // ESP32 thực thi lệnh rồi publish trạng thái thật lên iot/devices/status
   setTimeout(() => {
     if (!espOnline) return
 
-    // Mô phỏng ngoại lệ phần cứng cho LED 2: ESP8266 không gửi phản hồi xác nhận trạng thái
+    // Mô phỏng ngoại lệ phần cứng cho LED 2: ESP32 không gửi phản hồi xác nhận trạng thái
     if (device.id === 2 && led2ExceptionEnabled) {
-      console.warn('[mock] Mô phỏng ngoại lệ UC04: ESP8266 không gửi phản hồi cho Đèn LED 2 (chờ Frontend timeout & rollback)')
+      console.warn('[mock] Mô phỏng ngoại lệ UC04: ESP32 không gửi phản hồi cho Đèn LED 2 (chờ Frontend timeout & rollback)')
       return
     }
 
@@ -395,7 +395,7 @@ export async function exportActionHistory(filters = {}) {
 window.__iotMock = {
   setEspOnline(value) {
     espOnline = Boolean(value)
-    console.info(`[mock] ESP8266 ${espOnline ? 'ONLINE' : 'OFFLINE'}`)
+    console.info(`[mock] ESP32 ${espOnline ? 'ONLINE' : 'OFFLINE'}`)
   },
   setLed2Exception(value) {
     led2ExceptionEnabled = Boolean(value)

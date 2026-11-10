@@ -18,7 +18,8 @@ export default defineEventHandler(async (event) => {
 
   const { page, limit, offset } = pagination(event, 5000)
   const field = queryString(event, 'field')
-  const type = queryString(event, 'type') || (['temperature', 'humidity', 'light'].includes(field) ? field : '')
+  const sensorTypes = (await listSensors()).map((s) => s.type)
+  const type = queryString(event, 'type') || (sensorTypes.includes(field) ? field : '')
   const rawTime = queryString(event, 'time') || (field === 'time' ? queryString(event, 'value') : '')
   const search = queryString(event, 'search') || (!type && field !== 'time' ? queryString(event, 'value') : '')
 
@@ -74,7 +75,7 @@ export default defineEventHandler(async (event) => {
 
 /**
  * Dữ liệu biểu đồ trong khoảng thời gian gần nhất (vd. range=24h).
- * Gom nhóm trung bình theo khung (~288 điểm / cảm biến) để biểu đồ nhẹ dù ESP8266 gửi vài giây một lần.
+ * Gom nhóm trung bình theo khung (~288 điểm / cảm biến) để biểu đồ nhẹ dù ESP32 gửi vài giây một lần.
  */
 async function rangeSeries(range: string) {
   const m = range.match(RANGE_RE)

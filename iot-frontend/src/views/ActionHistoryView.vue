@@ -179,7 +179,7 @@ function clearFilters() {
   load()
 }
 
-// Khi ESP8266 xác nhận lệnh hoặc lệnh thất bại (fail), tải lại dữ liệu mới nhất
+// Khi ESP32 xác nhận lệnh hoặc lệnh thất bại (fail), tải lại dữ liệu mới nhất
 const offStatus = realtime.on('device:status', () => load())
 const offActionUpdate = realtime.on('action:update', () => load())
 
@@ -317,7 +317,7 @@ onBeforeUnmount(() => {
               <td>
                 <div
                   class="timestamp-cell"
-                  :title="row.confirmedAt ? `Xác nhận lúc ${formatDateTimeSlash(row.confirmedAt)}` : 'Chưa nhận xác nhận từ ESP8266'"
+                  :title="row.confirmedAt ? `Xác nhận lúc ${formatDateTimeSlash(row.confirmedAt)}` : 'Chưa nhận xác nhận từ ESP32'"
                 >
                   <span class="timestamp-val">{{ formatDateTimeSlash(row.createdAt) }}</span>
                   <button

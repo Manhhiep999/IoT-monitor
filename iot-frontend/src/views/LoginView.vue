@@ -37,7 +37,7 @@ async function submit() {
     <form class="login__card" novalidate @submit.prevent="submit">
       <div class="login__logo" aria-hidden="true" />
       <h1 class="login__title">Đăng nhập hệ thống</h1>
-      <p class="login__subtitle">IoT Room Environment Monitoring (ESP8266)</p>
+      <p class="login__subtitle">IoT Room Environment Monitoring (ESP32)</p>
 
       <div class="login__field">
         <label for="username" class="login__label">Tài khoản / Email</label>
@@ -71,7 +71,6 @@ async function submit() {
         {{ submitting ? 'Đang đăng nhập…' : 'Đăng nhập' }}
       </button>
 
-      <p v-if="USE_MOCK" class="login__hint">Chế độ demo: admin@iot.com / matkhau123</p>
     </form>
   </div>
 </template>

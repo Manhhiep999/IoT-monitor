@@ -25,11 +25,15 @@ const USERS = [
   { username: 'user@iot.com', password: 'matkhau123', fullName: 'Nguyễn Văn An' }
 ]
 
+// type trùng tên trường trong payload iot/sensors/data của ESP32. Trường nào không có trong danh mục
+// này sẽ bị Backend bỏ qua.
 const SENSORS = [
-  { id: 1, name: 'Nhiệt độ', type: 'temperature', unit: '°C' },
-  { id: 2, name: 'Độ ẩm', type: 'humidity', unit: '%' },
-  { id: 3, name: 'Ánh sáng', type: 'light', unit: 'lux' }
+  { id: 1, name: 'Nhiệt độ', type: 'temperature', unit: '°C', warnAbove: null },
+  { id: 2, name: 'Độ ẩm', type: 'humidity', unit: '%', warnAbove: null },
+  { id: 3, name: 'Ánh sáng', type: 'light', unit: 'lux', warnAbove: null }
 ]
+// Cảm biến đã gỡ khỏi hệ thống: xóa khỏi danh mục cùng dữ liệu đo của chúng
+const REMOVED_SENSOR_TYPES = ['gas', 'dust', 'noise']
 
 // Khớp với Frontend: Dashboard hiển thị danh sách thiết bị; LED 2 được FE dùng để demo ngoại lệ timeout
 const DEVICES = [
@@ -61,6 +65,7 @@ if (args.has('--reset')) {
 
 const schema = await readFile(new URL('../database/schema.sql', import.meta.url), 'utf8')
 await root.query(schema)
+await migrateSensorsTable()
 console.log(`Đã tạo bảng trong database "${cfg.database}"`)
 
 for (const u of USERS) {
@@ -71,12 +76,11 @@ for (const u of USERS) {
   )
 }
 for (const s of SENSORS) {
-  await root.query('INSERT IGNORE INTO sensors (id, name, type, unit) VALUES (?, ?, ?, ?)', [
-    s.id,
-    s.name,
-    s.type,
-    s.unit
-  ])
+  await root.query(
+    `INSERT INTO sensors (id, name, type, unit, warn_above) VALUES (?, ?, ?, ?, ?)
+     ON DUPLICATE KEY UPDATE name = VALUES(name), unit = VALUES(unit), warn_above = VALUES(warn_above)`,
+    [s.id, s.name, s.type, s.unit, s.warnAbove]
+  )
 }
 for (const d of DEVICES) {
   await root.query('INSERT IGNORE INTO devices (id, name, description) VALUES (?, ?, ?)', [
@@ -84,6 +88,14 @@ for (const d of DEVICES) {
     d.name,
     d.description
   ])
+}
+const [removed] = await root.query(
+  `DELETE sd FROM sensor_data sd JOIN sensors s ON s.id = sd.sensor_id WHERE s.type IN (?)`,
+  [REMOVED_SENSOR_TYPES]
+)
+const [removedSensors] = await root.query('DELETE FROM sensors WHERE type IN (?)', [REMOVED_SENSOR_TYPES])
+if (removedSensors.affectedRows) {
+  console.log(`Đã gỡ ${removedSensors.affectedRows} cảm biến giả lập và ${removed.affectedRows} bản ghi đo của chúng`)
 }
 console.log('Đã seed users / sensors / devices')
 
@@ -138,6 +150,22 @@ async function seedSample() {
   // Đồng bộ current_status với lần xác nhận cuối cùng ở trên
   await root.query("UPDATE devices SET current_status = CASE id WHEN 1 THEN 'on' WHEN 3 THEN 'on' ELSE 'off' END")
   console.log(`Đã sinh ${actions.length} bản ghi action_history mẫu`)
+}
+
+/** Database tạo từ bản ESP8266 cũ: type là ENUM 3 giá trị và chưa có warn_above -> nâng cấp tại chỗ, giữ dữ liệu */
+async function migrateSensorsTable() {
+  const [cols] = await root.query(
+    `SELECT COLUMN_NAME AS name, DATA_TYPE AS type FROM information_schema.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'sensors'`
+  )
+  if (cols.find((c) => c.name === 'type')?.type === 'enum') {
+    await root.query('ALTER TABLE sensors MODIFY type VARCHAR(30) NOT NULL')
+    console.log('Đã đổi sensors.type sang VARCHAR(30)')
+  }
+  if (!cols.some((c) => c.name === 'warn_above')) {
+    await root.query('ALTER TABLE sensors ADD COLUMN warn_above DECIMAL(10,2) NULL AFTER unit')
+    console.log('Đã thêm cột sensors.warn_above')
+  }
 }
 
 function round(n, digits) {
